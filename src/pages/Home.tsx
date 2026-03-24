@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import heroVideo from "@/assets/hero-tuscany-video.mp4.asset.json";
 import Layout from "@/components/Layout";
 import FadeIn from "@/components/FadeIn";
 
@@ -24,7 +23,7 @@ const Index = () => {
           playsInline
           className="absolute inset-0 w-full h-full object-cover"
         >
-          <source src={heroVideo.url} type="video/mp4" />
+<source src="/hero-tuscany-video3.mov" />
         </video>
         <div className="absolute inset-0 bg-gradient-to-t from-[#1a2e1a]/90 via-[#1a2e1a]/20 to-transparent" />
         <FadeIn className="relative z-10 px-6 md:px-12 lg:px-24 pb-16 md:pb-24">
