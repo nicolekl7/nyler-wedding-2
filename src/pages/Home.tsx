@@ -1,4 +1,6 @@
 import { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
+import heroVideo from "@/assets/hero-tuscany-video.mp4.asset.json";
 import Layout from "@/components/Layout";
 import FadeIn from "@/components/FadeIn";
 
@@ -21,9 +23,9 @@ const Index = () => {
           muted
           loop
           playsInline
-          className="absolute inset-0 w-full h-full object-cover"
-        >
-<source src="/hero-tuscany-video3.mov" />
+          className="absolute inset-0 w-full h-full object-cover">
+          
+          <source src={heroVideo.url} type="video/mp4" />
         </video>
         <div className="absolute inset-0 bg-gradient-to-t from-[#1a2e1a]/90 via-[#1a2e1a]/20 to-transparent" />
         <FadeIn className="relative z-10 px-6 md:px-12 lg:px-24 pb-16 md:pb-24">
@@ -51,12 +53,12 @@ const Index = () => {
             Please let us know if you are able to join us by submitting your official RSVP below.
             For those who can make it, we promise a weekend that is worth every mile.
           </p>
-          <a
-            href="/rsvp"
-            className="inline-block mt-10 border border-foreground rounded-full px-8 py-3 font-serif text-sm tracking-widest uppercase text-foreground hover:bg-foreground hover:text-background transition-colors duration-300"
-          >
+          <Link
+            to="/rsvp-v2"
+            className="inline-block mt-10 border border-foreground rounded-full px-8 py-3 font-serif text-sm tracking-widest uppercase text-foreground hover:bg-foreground hover:text-background transition-colors duration-300">
+            
             RSVP Here
-          </a>
+          </Link>
         </FadeIn>
       </section>
 
@@ -64,15 +66,15 @@ const Index = () => {
       {/* Countdown — days only */}
       <section className="page-section pt-0 pb-0 -mt-16 w-[90%] max-w-[1000px] mx-auto text-center">
         <FadeIn>
-          <p className="heading-sub mb-10">Countdown to Tuscany</p>
+          <p className="heading-sub mb-10 pt-[40px]">Countdown to Tuscany</p>
           <span className="font-serif text-5xl sm:text-6xl md:text-8xl font-light text-foreground">
             {daysLeft}
           </span>
           <p className="heading-sub mt-4 mb-0">Days</p>
         </FadeIn>
       </section>
-    </Layout>
-  );
+    </Layout>);
+
 };
 
 function getDaysLeft() {
