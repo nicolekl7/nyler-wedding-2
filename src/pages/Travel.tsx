@@ -6,9 +6,9 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import airImg from "@/assets/travel-by-air.jpg";
-import trainImg from "@/assets/travel-by-train.jpg";
-import carImg from "@/assets/travel-by-car.jpg";
+import airImg from "@/assets/travel-fly.avif";
+import trainImg from "@/assets/travel-train.jpg";
+import carImg from "@/assets/travel-car.jpg";
 
 const faqs = [
   {
