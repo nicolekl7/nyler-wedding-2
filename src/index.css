@@ -102,3 +102,15 @@
     @apply font-body text-xs uppercase tracking-[0.25em] text-muted-foreground hover:text-foreground transition-colors duration-300;
   }
 }
+/* Force hide iOS video play button in Low Power Mode */
+video::-webkit-media-controls {
+  display: none !important;
+}
+video::-webkit-media-controls-start-playback-button {
+  display: none !important;
+  -webkit-appearance: none;
+}
+video::-webkit-media-controls-overlay-play-button {
+  display: none !important;
+  -webkit-appearance: none;
+}
