@@ -7,7 +7,7 @@ import TheWeekend from "./pages/TheWeekend";
 import AccommodationsV2 from "./pages/AccommodationsV2";
 import BookingSuccess from "./pages/BookingSuccess";
 import Travel from "./pages/Travel";
-
+import ScrollToTop from "./components/ScrollToTop";
 
 import RSVP from "./pages/RSVP";
 import RsvpV2 from "./pages/RsvpV2";
