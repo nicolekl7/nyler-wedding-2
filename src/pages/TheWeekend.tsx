@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import Layout from "@/components/Layout";
 import FadeIn from "@/components/FadeIn";
 const itinerary = [
@@ -88,18 +89,18 @@ const TheWeekend = () => (
     <section className="w-[90%] max-w-[900px] mx-auto px-6 md:px-12 pb-24">
       <FadeIn>
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
-          <a
-            href="/travel"
+          <Link
+            to="/travel"
             className="inline-flex items-center justify-center gap-2 font-body text-sm tracking-widest uppercase border border-border px-8 py-4 hover:bg-primary hover:text-primary-foreground transition-colors duration-300"
           >
             Travel →
-          </a>
-          <a
-            href="/local-guide"
+          </Link>
+          <Link
+            to="/local-guide"
             className="inline-flex items-center justify-center gap-2 font-body text-sm tracking-widest uppercase border border-border px-8 py-4 hover:bg-primary hover:text-primary-foreground transition-colors duration-300"
           >
             Local Guide →
-          </a>
+          </Link>
         </div>
       </FadeIn>
     </section>
