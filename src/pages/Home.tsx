@@ -23,7 +23,7 @@ const Index = () => {
           muted
           loop
           playsInline
-          className="absolute inset-0 w-full h-full object-cover">
+className="absolute inset-0 w-full h-full object-cover pointer-events-none"
           
 <source src="/hero-tuscany-video3.mov" />
         </video>
