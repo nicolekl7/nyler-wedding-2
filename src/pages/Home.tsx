@@ -39,14 +39,11 @@ const Index = () => {
       </section>
 
       {/* Welcome */}
-      <section className="page-section pt-6 sm:pt-8 md:pt-12 w-[80%] max-w-[1000px] mx-auto text-center">
+      <section className="page-section pt-6 sm:pt-8 md:pt-12 w-[85%] max-w-[1100px] mx-auto text-center">
         <FadeIn>
           
           <p className="body-editorial mx-auto">
-            We're getting married in Tuscany on September 17, 2026, and we would absolutely love for
-            you to be there. We've planned a long weekend at Borgo Laticastelli—a private estate in
-            Rapolano Terme—with a welcome party on Wednesday evening, the ceremony and reception on
-            Thursday, and a pool day on Friday to help us recover (physically and emotionally).
+            We're getting married in Tuscany on September 17, 2026, and we would absolutely love for you to be there. We've planned a long weekend at Borgo Laticastelli—a private estate in Rapolano Terme—with a welcome party on Wednesday evening, the ceremony and reception on Thursday, and a pool day on Friday to help us recover (physically and emotionally).
           </p>
           <p className="body-editorial mx-auto mt-6">
             We know Italy is a long way to travel, and we mean it: there is no pressure. Please let us know if you are able to join us by submitting your official RSVP below. For those who can make it, we promise a weekend that is worth every mile.
