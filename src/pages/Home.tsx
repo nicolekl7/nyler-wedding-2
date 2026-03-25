@@ -39,7 +39,7 @@ const Index = () => {
       </section>
 
       {/* Welcome */}
-      <section className="page-section pt-6 sm:pt-8 md:pt-12 w-[80%] max-w-[950px] mx-auto text-center">
+      <section className="page-section pt-6 sm:pt-8 md:pt-12 w-[80%] max-w-[1000px] mx-auto text-center">
         <FadeIn>
           
           <p className="body-editorial mx-auto">
