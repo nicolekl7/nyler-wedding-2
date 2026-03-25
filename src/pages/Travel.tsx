@@ -72,12 +72,12 @@ const Travel = () => (
     <section className="px-6 md:px-12 lg:px-24 pb-16 md:pb-24 w-[90%] max-w-[1400px] mx-auto">
       <FadeIn>
         <div className="border border-border bg-stone-light/40 px-8 py-8 md:px-12 md:py-10">
-          <p className="heading-sub text-primary mb-4">Travel PSA</p>
+          <p className="heading-sub text-primary mb-4">A Few Things to Know</p>
           <p className="font-body text-base leading-[1.9] text-muted-foreground font-light">
             <strong className="text-foreground font-medium">Important:</strong> Italy requires your passport to be valid for at least six months beyond your planned date of departure. Please check your passport expiration date today! If it expires before March 2027, you will need to renew it before booking your flights.
           </p>
           <p className="font-body text-base leading-[1.9] text-muted-foreground font-light mt-4">
-            Also, don't forget to pack Type C or Type L travel adapters, and we recommend carrying a little bit of Euro for small cafes or taxis.
+            Also, don't forget to pack Type C or Type L travel adapters.
           </p>
         </div>
       </FadeIn>
