@@ -4,37 +4,37 @@ import FadeIn from "@/components/FadeIn";
 const itinerary = [
   {
     day: "Wednesday, September 16",
-    title: "Welcome Pizza Party",
+    title: "Welcome Party",
     description:
-      "Join us under the stars for wood-fired pizza, Aperol Spritzes, and our official welcome to Tuscany.",
+      "Join us under the stars for wood-fired pizza, Aperol Spritzes, and a warm welcome to Tuscany.",
     attire:
-      "La Dolce Vita Casual (Linens, summer dresses, effortless Italian style).",
+      "La Dolce Vita Casual (Linens, summer dresses, effortless Italian style)",
   },
   {
     day: "Thursday, September 17",
     title: "The Wedding Day",
     description:
-      "Our ceremony overlooking the Tuscan hills, followed by an evening of Aperitivo, dinner, and dancing the night away.",
+      "Our ceremony overlooking the Tuscan hills, followed by an evening of aperitivo, dinner, and dancing the night away.",
     attire:
-      "Tuscan Formal (Earth tones encouraged. Please note the grounds feature cobblestone and grass—block heels are highly recommended!).",
+      "Tuscan Formal (Please note the grounds feature cobblestone and grass— block heels are recommended!)",
   },
   {
     day: "Friday, September 18",
     title: "La Dolce Far Niente Pool Party",
     description:
-      "The art of doing nothing. Recover by the castle pools with lunch, drinks, and sunshine.",
-    attire: "Vintage Resort Wear.",
+      "The art of doing nothing. Recover by the pool with lunch, drinks, and sunshine.",
+    attire: "Vintage Resort Wear",
   },
 ];
 
 const faqs = [
   {
     q: "Which airport should I fly into?",
-    a: "Florence (FLR) is the closest, roughly 1 hour away. Rome (FCO) is often cheaper for international flights and is a beautiful 2.5 hour drive or fast-train ride away!",
+    a: "Florence (FLR) is the closest, about an hour away by car. Rome (FCO) is often easiest for international flights with nonstop options available and is a beautiful 2.5 hour drive or train ride away. Pisa (PSA) is another option for a little bit under a 2 hour drive.",
   },
   {
     q: "Will I need a rental car?",
-    a: "Once you arrive at Borgo Laticastelli, you will not need a car for the 3 days of wedding events! However, if you are extending your trip to explore Tuscany, a rental car is highly recommended.",
+    a: "Once you arrive at Borgo Laticastelli, you will not need a car for the 3 days of wedding events! However, if you are extending your trip to explore Tuscany, a rental car is recommended.",
   },
   {
     q: "Are gifts expected?",
