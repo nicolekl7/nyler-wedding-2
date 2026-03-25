@@ -55,20 +55,19 @@ const sections = [
 const Travel = () => (
   <Layout>
     {/* Hero Header */}
-    <section className="px-6 md:px-12 lg:px-24 pt-20 md:pt-32 pb-12 md:pb-20 w-[90%] max-w-[1000px] mx-auto text-center">
+    <section className="page-section w-[90%] max-w-[1400px] mx-auto">
       <FadeIn>
-        <p className="heading-sub mb-6">Your Journey Begins</p>
-        <h1 className="font-serif text-3xl sm:text-4xl md:text-6xl lg:text-7xl font-light tracking-tight text-foreground leading-tight mb-8">
+        <h1 className="heading-section text-center mb-4">
           Getting to Borgo Laticastelli
         </h1>
-        <div className="w-16 h-px bg-primary mx-auto mb-10" />
-   <p className="font-body text-base md:text-lg leading-[1.9] text-muted-foreground font-light max-w-4xl mx-auto">
+        <div className="w-12 h-px bg-primary mx-auto mb-6" />
+        <p className="body-editorial text-center mx-auto mb-16 max-w-4xl">
           The journey to Tuscany is part of the magic. Whether you fly, take the train, or rent a car, every route leads through some of the most beautiful landscape in the world.
         </p>
       </FadeIn>
     </section>
-
-    {/* Travel PSA */}
+    
+    {/* A Few Things to Know */}
     <section className="px-6 md:px-12 lg:px-24 pb-16 md:pb-24 w-[90%] max-w-[1400px] mx-auto">
       <FadeIn>
         <div className="border border-border bg-stone-light/40 px-8 py-8 md:px-12 md:py-10">
