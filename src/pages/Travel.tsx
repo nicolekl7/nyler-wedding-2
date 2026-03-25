@@ -62,7 +62,7 @@ const Travel = () => (
           Getting to Borgo Laticastelli
         </h1>
         <div className="w-16 h-px bg-primary mx-auto mb-10" />
-        <p className="font-body text-base md:text-lg leading-[1.9] text-muted-foreground font-light max-w-2xl mx-auto">
+   <p className="font-body text-base md:text-lg leading-[1.9] text-muted-foreground font-light max-w-4xl mx-auto">
           The journey to Tuscany is part of the magic. Whether you fly, take the train, or rent a car, every route leads through some of the most beautiful landscape in the world.
         </p>
       </FadeIn>
@@ -171,7 +171,7 @@ const Travel = () => (
                   </p>
                 ) : (
                   <p className="font-body text-base md:text-lg leading-[1.9] text-muted-foreground font-light">
-                    Absolutely not. You traveling across the world to celebrate with us is the greatest gift we could ever ask for! Please, no formal gifts. If you'd like to donate to our house fund, you can do so{" "}
+                    Absolutely not. You traveling across the world to celebrate with us is the greatest gift we could ever ask for.
                     <a href="#" className="text-primary underline hover:text-foreground transition-colors">here</a>.
                   </p>
                 )}
