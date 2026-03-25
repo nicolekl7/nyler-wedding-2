@@ -49,9 +49,7 @@ const Index = () => {
             Thursday, and a pool day on Friday to help us recover (physically and emotionally).
           </p>
           <p className="body-editorial mx-auto mt-6">
-            We know Italy is a long way to travel, and we mean it when we say there is no pressure.
-            Please let us know if you are able to join us by submitting your official RSVP below.
-            For those who can make it, we promise a weekend that is worth every mile.
+            We know Italy is a long way to travel, and we mean it: there is no pressure. Please let us know if you are able to join us by submitting your official RSVP below. For those who can make it, we promise a weekend that is worth every mile.
           </p>
           <Link
             to="/rsvp-v2"
