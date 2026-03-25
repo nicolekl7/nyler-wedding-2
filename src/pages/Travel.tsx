@@ -6,7 +6,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import airImg from "@/assets/travel-fly.avif";
+import airImg from "@/assets/travel-fly.jpeg";
 import trainImg from "@/assets/travel-train.jpg";
 import carImg from "@/assets/travel-car.jpg";
 
