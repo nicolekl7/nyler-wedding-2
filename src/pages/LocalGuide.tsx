@@ -44,7 +44,7 @@ const LocalGuide = () => (
       <FadeIn>
         <h1 className="heading-section text-center mb-4">Local Guide</h1>
         <div className="w-12 h-px bg-primary mx-auto mb-6" />
-        <p className="body-editorial text-center mx-auto mb-16">
+<p className="body-editorial text-center mx-auto mb-16 max-w-4xl">
           Extending your trip? Here are some of our favorite Tuscan highlights near the venue.
         </p>
       </FadeIn>
