@@ -95,6 +95,7 @@ const RsvpFormEmbed = ({ accommodation: externalAccommodation, onAccommodationCh
     setEventRsvps({});
     setDietary("");
 
+      // Check for previous RSVP — first from this guest, then from any party member
     const { data: prev } = await supabase
       .from("invited_guests")
       .select("*")
@@ -103,18 +104,50 @@ const RsvpFormEmbed = ({ accommodation: externalAccommodation, onAccommodationCh
       .eq("has_responded", true)
       .limit(1);
 
-    if (prev && prev.length > 0) {
-      const p = prev[0];
+    let responder = prev && prev.length > 0 ? prev[0] : null;
+
+    // If this guest hasn't responded, check if anyone else in their party has
+    if (!responder) {
+      const { data: partyMembers } = await supabase
+        .from("guests")
+        .select("first_name, last_name")
+        .eq("party_name", found.party_name);
+
+      if (partyMembers && partyMembers.length > 1) {
+        for (const member of partyMembers) {
+          if (
+            member.first_name.toLowerCase() === firstName.toLowerCase() &&
+            member.last_name.toLowerCase() === lastName.toLowerCase()
+          ) continue;
+
+          const { data: memberRsvp } = await supabase
+            .from("invited_guests")
+            .select("*")
+            .ilike("first_name", member.first_name)
+            .ilike("last_name", member.last_name)
+            .eq("has_responded", true)
+            .limit(1);
+
+          if (memberRsvp && memberRsvp.length > 0) {
+            responder = memberRsvp[0];
+            break;
+          }
+        }
+      }
+    }
+
+    if (responder) {
       setPreviouslyResponded(true);
       const rsvps: Record<string, string> = {};
-      if (p.welcome_party_rsvp) rsvps.welcome_party_rsvp = p.welcome_party_rsvp;
-      if (p.wedding_day_rsvp) rsvps.wedding_day_rsvp = p.wedding_day_rsvp;
-      if (p.pool_day_rsvp) rsvps.pool_day_rsvp = p.pool_day_rsvp;
+      if (responder.welcome_party_rsvp) rsvps.welcome_party_rsvp = responder.welcome_party_rsvp;
+      if (responder.wedding_day_rsvp) rsvps.wedding_day_rsvp = responder.wedding_day_rsvp;
+      if (responder.pool_day_rsvp) rsvps.pool_day_rsvp = responder.pool_day_rsvp;
       setEventRsvps(rsvps);
-      if (p.dietary_restrictions) setDietary(p.dietary_restrictions);
+      if (responder.dietary_restrictions) setDietary(responder.dietary_restrictions);
     } else {
       setPreviouslyResponded(false);
     }
+
 
     setLoading(false);
   };
