@@ -183,8 +183,8 @@ const RsvpFormEmbed = ({ accommodation: externalAccommodation, onAccommodationCh
       return;
     }
 
-
     const declined = events.every((ev) => eventRsvps[ev.key] === "decline");
+    const submittedAt = new Date().toISOString();
 
     const formData = new URLSearchParams();
     formData.append("First Name", guest?.first_name || "");
@@ -207,20 +207,52 @@ const RsvpFormEmbed = ({ accommodation: externalAccommodation, onAccommodationCh
         }
       );
 
-      await supabase
-        .from("invited_guests")
-        .update({
-          welcome_party_rsvp: eventRsvps.welcome_party_rsvp,
-          wedding_day_rsvp: eventRsvps.wedding_day_rsvp,
-          pool_day_rsvp: eventRsvps.pool_day_rsvp,
+      // Upsert one row per guest into invited_guests
+      for (let i = 0; i < attendingCount; i++) {
+        const nameParts = guestNames[i].trim().split(/\s+/);
+        const gFirstName = nameParts[0] || "";
+        const gLastName = nameParts.slice(1).join(" ") || "";
+
+        const rowData = {
+          first_name: gFirstName,
+          last_name: gLastName,
+          welcome_party_rsvp: eventRsvps.welcome_party_rsvp || null,
+          wedding_day_rsvp: eventRsvps.wedding_day_rsvp || null,
+          pool_day_rsvp: eventRsvps.pool_day_rsvp || null,
           dietary_restrictions: dietary.trim() || null,
           has_responded: true,
-        })
-        .ilike("first_name", guest?.first_name || "")
-        .ilike("last_name", guest?.last_name || "");
+          submitted_at: submittedAt,
+          group_id: guest?.id || crypto.randomUUID(),
+        };
+
+        // Check if this guest already has a row
+        const { data: existing } = await supabase
+          .from("invited_guests")
+          .select("id")
+          .ilike("first_name", gFirstName)
+          .ilike("last_name", gLastName)
+          .limit(1);
+
+        if (existing && existing.length > 0) {
+          await supabase
+            .from("invited_guests")
+            .update(rowData)
+            .eq("id", existing[0].id);
+        } else {
+          await supabase
+            .from("invited_guests")
+            .insert(rowData);
+        }
+      }
 
       localStorage.setItem("hasRSVPd", "true");
       localStorage.setItem("rsvpName", `${guest?.first_name} ${guest?.last_name}`);
+      localStorage.setItem("rsvpAccommodation", accommodation);
+      localStorage.setItem("rsvpDietary", dietary.trim());
+      localStorage.setItem("rsvpNotes", notes.trim());
+      localStorage.setItem("rsvpEvents", JSON.stringify(eventRsvps));
+      localStorage.setItem("rsvpGuestNames", JSON.stringify(guestNames.slice(0, attendingCount)));
+      localStorage.setItem("rsvpAttendingCount", String(attendingCount));
       setAllDeclined(declined);
       setSubmitted(true);
       onSubmitSuccess?.(declined, accommodation);
@@ -234,10 +266,28 @@ const RsvpFormEmbed = ({ accommodation: externalAccommodation, onAccommodationCh
   const handleEditRsvp = async () => {
     localStorage.removeItem("hasRSVPd");
     setAlreadyRsvpd(false);
+
+    // Restore saved selections from localStorage
+    const savedEvents = localStorage.getItem("rsvpEvents");
+    const savedDietary = localStorage.getItem("rsvpDietary");
+    const savedNotes = localStorage.getItem("rsvpNotes");
+    const savedAccommodation = localStorage.getItem("rsvpAccommodation");
+    const savedGuestNames = localStorage.getItem("rsvpGuestNames");
+    const savedAttendingCount = localStorage.getItem("rsvpAttendingCount");
+
+    if (savedEvents) setEventRsvps(JSON.parse(savedEvents));
+    if (savedDietary) setDietary(savedDietary);
+    if (savedNotes) setNotes(savedNotes);
+    if (savedAccommodation) setAccommodation(savedAccommodation);
+    if (savedGuestNames) {
+      const names = JSON.parse(savedGuestNames);
+      setGuestNames(names);
+      if (savedAttendingCount) setAttendingCount(Number(savedAttendingCount));
+    }
+
     const savedName = localStorage.getItem("rsvpName");
     if (savedName) {
       setSearchName(savedName);
-      // Auto-trigger search
       const parts = savedName.trim().split(/\s+/);
       if (parts.length >= 2) {
         setLoading(true);
@@ -255,56 +305,62 @@ const RsvpFormEmbed = ({ accommodation: externalAccommodation, onAccommodationCh
         if (match && match.length > 0) {
           const found = match[0] as GuestRecord;
           setGuest(found);
-          setAttendingCount(1);
-          setGuestNames([`${found.first_name} ${found.last_name}`]);
 
-          // Load previous responses
-          const { data: prev } = await supabase
-            .from("invited_guests")
-            .select("*")
-            .ilike("first_name", firstName)
-            .ilike("last_name", lastName)
-            .eq("has_responded", true)
-            .limit(1);
+          // If we didn't have localStorage data, try loading from DB
+          if (!savedEvents) {
+            if (!savedGuestNames) {
+              setAttendingCount(1);
+              setGuestNames([`${found.first_name} ${found.last_name}`]);
+            }
 
-          let responder = prev && prev.length > 0 ? prev[0] : null;
+            const { data: prev } = await supabase
+              .from("invited_guests")
+              .select("*")
+              .ilike("first_name", firstName)
+              .ilike("last_name", lastName)
+              .eq("has_responded", true)
+              .limit(1);
 
-          if (!responder) {
-            const { data: partyMembers } = await supabase
-              .from("guests")
-              .select("first_name, last_name")
-              .eq("party_name", found.party_name);
+            let responder = prev && prev.length > 0 ? prev[0] : null;
 
-            if (partyMembers && partyMembers.length > 1) {
-              for (const member of partyMembers) {
-                if (
-                  member.first_name.toLowerCase() === firstName.toLowerCase() &&
-                  member.last_name.toLowerCase() === lastName.toLowerCase()
-                ) continue;
-                const { data: memberRsvp } = await supabase
-                  .from("invited_guests")
-                  .select("*")
-                  .ilike("first_name", member.first_name)
-                  .ilike("last_name", member.last_name)
-                  .eq("has_responded", true)
-                  .limit(1);
-                if (memberRsvp && memberRsvp.length > 0) {
-                  responder = memberRsvp[0];
-                  break;
+            if (!responder) {
+              const { data: partyMembers } = await supabase
+                .from("guests")
+                .select("first_name, last_name")
+                .eq("party_name", found.party_name);
+
+              if (partyMembers && partyMembers.length > 1) {
+                for (const member of partyMembers) {
+                  if (
+                    member.first_name.toLowerCase() === firstName.toLowerCase() &&
+                    member.last_name.toLowerCase() === lastName.toLowerCase()
+                  ) continue;
+                  const { data: memberRsvp } = await supabase
+                    .from("invited_guests")
+                    .select("*")
+                    .ilike("first_name", member.first_name)
+                    .ilike("last_name", member.last_name)
+                    .eq("has_responded", true)
+                    .limit(1);
+                  if (memberRsvp && memberRsvp.length > 0) {
+                    responder = memberRsvp[0];
+                    break;
+                  }
                 }
               }
             }
+
+            if (responder) {
+              const rsvps: Record<string, string> = {};
+              if (responder.welcome_party_rsvp) rsvps.welcome_party_rsvp = responder.welcome_party_rsvp;
+              if (responder.wedding_day_rsvp) rsvps.wedding_day_rsvp = responder.wedding_day_rsvp;
+              if (responder.pool_day_rsvp) rsvps.pool_day_rsvp = responder.pool_day_rsvp;
+              setEventRsvps(rsvps);
+              if (responder.dietary_restrictions) setDietary(responder.dietary_restrictions);
+            }
           }
 
-          if (responder) {
-            setPreviouslyResponded(true);
-            const rsvps: Record<string, string> = {};
-            if (responder.welcome_party_rsvp) rsvps.welcome_party_rsvp = responder.welcome_party_rsvp;
-            if (responder.wedding_day_rsvp) rsvps.wedding_day_rsvp = responder.wedding_day_rsvp;
-            if (responder.pool_day_rsvp) rsvps.pool_day_rsvp = responder.pool_day_rsvp;
-            setEventRsvps(rsvps);
-            if (responder.dietary_restrictions) setDietary(responder.dietary_restrictions);
-          }
+          setPreviouslyResponded(true);
         }
         setLoading(false);
       }
