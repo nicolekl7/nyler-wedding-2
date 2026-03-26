@@ -4,7 +4,7 @@ import { Menu, X } from "lucide-react";
 
 const navItems = [
   { path: "/", label: "Home" },
-  { path: "/the-weekend", label: "Weekend" },
+  { path: "/the-weekend", label: "Events" },
   { path: "/travel", label: "Travel" },
   { path: "/local-guide", label: "Explore" },
   { path: "/rsvp-v2", label: "RSVP", cta: true },
