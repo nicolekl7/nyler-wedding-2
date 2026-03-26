@@ -76,7 +76,7 @@ const RsvpV2 = () => {
         <FadeIn delay={100}>
           <div className="max-w-[660px] mx-auto mb-16">
             <p className="body-editorial mx-auto text-center !leading-snug">
-              We have exclusively reserved all of Borgo Laticastelli for our guests. If you are staying onsite, all meals and drinks will be covered for the full three days. To get started, select your room below or let us know you'll be staying offsite. Once you've made your selection, you'll be taken directly to the RSVP for the weekend's events.
+              We have exclusively reserved all of Borgo Laticastelli for our guests. If you are staying onsite, all meals and drinks are covered for the full three days—our treat! To get started, select your room below or let us know you'll be staying offsite. Once you've made your selection, you'll be taken directly to the RSVP for the weekend's events.
             </p>
             <p className="body-editorial mx-auto text-center mt-4 text-foreground font-normal !leading-snug">
               Rooms are available on a first-come, first-served basis. Prices are per room for the full three-night stay and cannot be prorated. Please note that reservations not paid within 48 hours will be released.
