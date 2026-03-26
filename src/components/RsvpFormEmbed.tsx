@@ -4,14 +4,7 @@ import FadeIn from "@/components/FadeIn";
 import EventRsvpButton from "@/components/EventRsvpButton";
 import { toast } from "sonner";
 import { Search } from "lucide-react";
-
-type GuestRecord = {
-  id: string;
-  first_name: string;
-  last_name: string;
-  party_name: string;
-  max_guests: number;
-};
+import { loadPartyRsvpState, savePartyRsvpState, type GuestRecord } from "@/lib/rsvp";
 
 const events = [
   { key: "welcome_party_rsvp" as const, label: "Welcome Pizza Party", sub: "Wednesday, Sept 16 · 6:30 PM" },
@@ -70,6 +63,7 @@ const RsvpFormEmbed = ({ accommodation: externalAccommodation, onAccommodationCh
       toast.error("Please enter your first and last name");
       return;
     }
+
     setLoading(true);
     setSearched(true);
 
@@ -91,63 +85,15 @@ const RsvpFormEmbed = ({ accommodation: externalAccommodation, onAccommodationCh
 
     const found = match[0] as GuestRecord;
     setGuest(found);
-    setAttendingCount(1);
-    setGuestNames([`${found.first_name} ${found.last_name}`]);
-    setEventRsvps({});
-    setDietary("");
 
-    // Check for previous RSVP — first from this guest, then from any party member
-    const { data: prev } = await supabase
-      .from("invited_guests")
-      .select("*")
-      .ilike("first_name", firstName)
-      .ilike("last_name", lastName)
-      .eq("has_responded", true)
-      .limit(1);
-
-    let responder = prev && prev.length > 0 ? prev[0] : null;
-
-    // If this guest hasn't responded, check if anyone else in their party has
-    if (!responder) {
-      const { data: partyMembers } = await supabase
-        .from("guests")
-        .select("first_name, last_name")
-        .eq("party_name", found.party_name);
-
-      if (partyMembers && partyMembers.length > 1) {
-        for (const member of partyMembers) {
-          if (
-            member.first_name.toLowerCase() === firstName.toLowerCase() &&
-            member.last_name.toLowerCase() === lastName.toLowerCase()
-          ) continue;
-
-          const { data: memberRsvp } = await supabase
-            .from("invited_guests")
-            .select("*")
-            .ilike("first_name", member.first_name)
-            .ilike("last_name", member.last_name)
-            .eq("has_responded", true)
-            .limit(1);
-
-          if (memberRsvp && memberRsvp.length > 0) {
-            responder = memberRsvp[0];
-            break;
-          }
-        }
-      }
-    }
-
-    if (responder) {
-      setPreviouslyResponded(true);
-      const rsvps: Record<string, string> = {};
-      if (responder.welcome_party_rsvp) rsvps.welcome_party_rsvp = responder.welcome_party_rsvp;
-      if (responder.wedding_day_rsvp) rsvps.wedding_day_rsvp = responder.wedding_day_rsvp;
-      if (responder.pool_day_rsvp) rsvps.pool_day_rsvp = responder.pool_day_rsvp;
-      setEventRsvps(rsvps);
-      if (responder.dietary_restrictions) setDietary(responder.dietary_restrictions);
-    } else {
-      setPreviouslyResponded(false);
-    }
+    const loadedState = await loadPartyRsvpState(found, firstName, lastName);
+    setPreviouslyResponded(loadedState.previouslyResponded);
+    setEventRsvps(loadedState.eventRsvps);
+    setDietary(loadedState.dietary);
+    setNotes(loadedState.notes);
+    setAccommodation(loadedState.accommodation);
+    setGuestNames(loadedState.guestNames);
+    setAttendingCount(Math.min(found.max_guests, loadedState.attendingCount));
 
     setLoading(false);
   };
@@ -184,7 +130,6 @@ const RsvpFormEmbed = ({ accommodation: externalAccommodation, onAccommodationCh
     }
 
     const declined = events.every((ev) => eventRsvps[ev.key] === "decline");
-    const submittedAt = new Date().toISOString();
 
     const formData = new URLSearchParams();
     formData.append("First Name", guest?.first_name || "");
@@ -192,8 +137,8 @@ const RsvpFormEmbed = ({ accommodation: externalAccommodation, onAccommodationCh
     formData.append("Wednesday Welcome Party", eventRsvps.welcome_party_rsvp === "accept" ? "Accept" : "Decline");
     formData.append("Thursday Wedding", eventRsvps.wedding_day_rsvp === "accept" ? "Accept" : "Decline");
     formData.append("Friday Recovery Day", eventRsvps.pool_day_rsvp === "accept" ? "Accept" : "Decline");
-    formData.append("Dietary Restrictions", dietary.trim() || "None");
     formData.append("Room Preference", accommodation || "");
+    formData.append("Dietary Restrictions", dietary.trim() || "None");
     formData.append("Notes", notes.trim() || "");
 
     try {
@@ -207,52 +152,16 @@ const RsvpFormEmbed = ({ accommodation: externalAccommodation, onAccommodationCh
         }
       );
 
-      // Upsert one row per guest into invited_guests
-      for (let i = 0; i < attendingCount; i++) {
-        const nameParts = guestNames[i].trim().split(/\s+/);
-        const gFirstName = nameParts[0] || "";
-        const gLastName = nameParts.slice(1).join(" ") || "";
-
-        const rowData = {
-          first_name: gFirstName,
-          last_name: gLastName,
-          welcome_party_rsvp: eventRsvps.welcome_party_rsvp || null,
-          wedding_day_rsvp: eventRsvps.wedding_day_rsvp || null,
-          pool_day_rsvp: eventRsvps.pool_day_rsvp || null,
-          dietary_restrictions: dietary.trim() || null,
-          has_responded: true,
-          submitted_at: submittedAt,
-          group_id: guest?.id || crypto.randomUUID(),
-        };
-
-        // Check if this guest already has a row
-        const { data: existing } = await supabase
-          .from("invited_guests")
-          .select("id")
-          .ilike("first_name", gFirstName)
-          .ilike("last_name", gLastName)
-          .limit(1);
-
-        if (existing && existing.length > 0) {
-          await supabase
-            .from("invited_guests")
-            .update(rowData)
-            .eq("id", existing[0].id);
-        } else {
-          await supabase
-            .from("invited_guests")
-            .insert(rowData);
-        }
-      }
+      await savePartyRsvpState({
+        guestNames: guestNames.slice(0, attendingCount),
+        eventRsvps,
+        dietary,
+        notes,
+        accommodation,
+      });
 
       localStorage.setItem("hasRSVPd", "true");
       localStorage.setItem("rsvpName", `${guest?.first_name} ${guest?.last_name}`);
-      localStorage.setItem("rsvpAccommodation", accommodation);
-      localStorage.setItem("rsvpDietary", dietary.trim());
-      localStorage.setItem("rsvpNotes", notes.trim());
-      localStorage.setItem("rsvpEvents", JSON.stringify(eventRsvps));
-      localStorage.setItem("rsvpGuestNames", JSON.stringify(guestNames.slice(0, attendingCount)));
-      localStorage.setItem("rsvpAttendingCount", String(attendingCount));
       setAllDeclined(declined);
       setSubmitted(true);
       onSubmitSuccess?.(declined, accommodation);
@@ -267,104 +176,45 @@ const RsvpFormEmbed = ({ accommodation: externalAccommodation, onAccommodationCh
     localStorage.removeItem("hasRSVPd");
     setAlreadyRsvpd(false);
 
-    // Restore saved selections from localStorage
-    const savedEvents = localStorage.getItem("rsvpEvents");
-    const savedDietary = localStorage.getItem("rsvpDietary");
-    const savedNotes = localStorage.getItem("rsvpNotes");
-    const savedAccommodation = localStorage.getItem("rsvpAccommodation");
-    const savedGuestNames = localStorage.getItem("rsvpGuestNames");
-    const savedAttendingCount = localStorage.getItem("rsvpAttendingCount");
+    const savedName = localStorage.getItem("rsvpName") || searchName;
+    if (!savedName) return;
 
-    if (savedEvents) setEventRsvps(JSON.parse(savedEvents));
-    if (savedDietary) setDietary(savedDietary);
-    if (savedNotes) setNotes(savedNotes);
-    if (savedAccommodation) setAccommodation(savedAccommodation);
-    if (savedGuestNames) {
-      const names = JSON.parse(savedGuestNames);
-      setGuestNames(names);
-      if (savedAttendingCount) setAttendingCount(Number(savedAttendingCount));
+    setSearchName(savedName);
+    const parts = savedName.trim().split(/\s+/);
+    if (parts.length < 2) return;
+
+    setLoading(true);
+    setSearched(true);
+
+    const firstName = parts[0];
+    const lastName = parts.slice(1).join(" ");
+
+    const { data: match } = await supabase
+      .from("guests")
+      .select("*")
+      .ilike("first_name", firstName)
+      .ilike("last_name", lastName)
+      .limit(1);
+
+    if (!match || match.length === 0) {
+      setGuest(null);
+      setLoading(false);
+      return;
     }
 
-    const savedName = localStorage.getItem("rsvpName");
-    if (savedName) {
-      setSearchName(savedName);
-      const parts = savedName.trim().split(/\s+/);
-      if (parts.length >= 2) {
-        setLoading(true);
-        setSearched(true);
-        const firstName = parts[0];
-        const lastName = parts.slice(1).join(" ");
+    const found = match[0] as GuestRecord;
+    setGuest(found);
 
-        const { data: match } = await supabase
-          .from("guests")
-          .select("*")
-          .ilike("first_name", firstName)
-          .ilike("last_name", lastName)
-          .limit(1);
+    const loadedState = await loadPartyRsvpState(found, firstName, lastName);
+    setPreviouslyResponded(loadedState.previouslyResponded);
+    setEventRsvps(loadedState.eventRsvps);
+    setDietary(loadedState.dietary);
+    setNotes(loadedState.notes);
+    setAccommodation(loadedState.accommodation);
+    setGuestNames(loadedState.guestNames);
+    setAttendingCount(Math.min(found.max_guests, loadedState.attendingCount));
 
-        if (match && match.length > 0) {
-          const found = match[0] as GuestRecord;
-          setGuest(found);
-
-          // If we didn't have localStorage data, try loading from DB
-          if (!savedEvents) {
-            if (!savedGuestNames) {
-              setAttendingCount(1);
-              setGuestNames([`${found.first_name} ${found.last_name}`]);
-            }
-
-            const { data: prev } = await supabase
-              .from("invited_guests")
-              .select("*")
-              .ilike("first_name", firstName)
-              .ilike("last_name", lastName)
-              .eq("has_responded", true)
-              .limit(1);
-
-            let responder = prev && prev.length > 0 ? prev[0] : null;
-
-            if (!responder) {
-              const { data: partyMembers } = await supabase
-                .from("guests")
-                .select("first_name, last_name")
-                .eq("party_name", found.party_name);
-
-              if (partyMembers && partyMembers.length > 1) {
-                for (const member of partyMembers) {
-                  if (
-                    member.first_name.toLowerCase() === firstName.toLowerCase() &&
-                    member.last_name.toLowerCase() === lastName.toLowerCase()
-                  ) continue;
-                  const { data: memberRsvp } = await supabase
-                    .from("invited_guests")
-                    .select("*")
-                    .ilike("first_name", member.first_name)
-                    .ilike("last_name", member.last_name)
-                    .eq("has_responded", true)
-                    .limit(1);
-                  if (memberRsvp && memberRsvp.length > 0) {
-                    responder = memberRsvp[0];
-                    break;
-                  }
-                }
-              }
-            }
-
-            if (responder) {
-              const rsvps: Record<string, string> = {};
-              if (responder.welcome_party_rsvp) rsvps.welcome_party_rsvp = responder.welcome_party_rsvp;
-              if (responder.wedding_day_rsvp) rsvps.wedding_day_rsvp = responder.wedding_day_rsvp;
-              if (responder.pool_day_rsvp) rsvps.pool_day_rsvp = responder.pool_day_rsvp;
-              setEventRsvps(rsvps);
-              if (responder.dietary_restrictions) setDietary(responder.dietary_restrictions);
-            }
-          }
-
-          setPreviouslyResponded(true);
-        }
-        setLoading(false);
-      }
-    }
+    setLoading(false);
   };
 
   if (alreadyRsvpd && !submitted) {
