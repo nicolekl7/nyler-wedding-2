@@ -32,9 +32,10 @@ const accommodationOptions = [
 interface RsvpFormEmbedProps {
   accommodation?: string;
   onAccommodationChange?: (val: string) => void;
+  onSubmitSuccess?: (allDeclined: boolean, accommodation: string) => void;
 }
 
-const RsvpFormEmbed = ({ accommodation: externalAccommodation, onAccommodationChange }: RsvpFormEmbedProps = {}) => {
+const RsvpFormEmbed = ({ accommodation: externalAccommodation, onAccommodationChange, onSubmitSuccess }: RsvpFormEmbedProps = {}) => {
   const [searchName, setSearchName] = useState("");
   const [guest, setGuest] = useState<GuestRecord | null>(null);
   const [loading, setLoading] = useState(false);
@@ -95,7 +96,7 @@ const RsvpFormEmbed = ({ accommodation: externalAccommodation, onAccommodationCh
     setEventRsvps({});
     setDietary("");
 
-      // Check for previous RSVP — first from this guest, then from any party member
+    // Check for previous RSVP — first from this guest, then from any party member
     const { data: prev } = await supabase
       .from("invited_guests")
       .select("*")
@@ -148,7 +149,6 @@ const RsvpFormEmbed = ({ accommodation: externalAccommodation, onAccommodationCh
       setPreviouslyResponded(false);
     }
 
-
     setLoading(false);
   };
 
@@ -162,20 +162,24 @@ const RsvpFormEmbed = ({ accommodation: externalAccommodation, onAccommodationCh
   };
 
   const handleSubmit = async () => {
+    setLoading(true);
     for (const ev of events) {
       if (!eventRsvps[ev.key]) {
         toast.error(`Please select Accept or Decline for ${ev.label}`);
+        setLoading(false);
         return;
       }
     }
     for (let i = 0; i < attendingCount; i++) {
       if (!guestNames[i]?.trim()) {
         toast.error(`Please enter the name for guest ${i + 1}`);
+        setLoading(false);
         return;
       }
     }
     if (!accommodation) {
       toast.error("Please select your accommodation preference");
+      setLoading(false);
       return;
     }
 
@@ -216,13 +220,95 @@ const RsvpFormEmbed = ({ accommodation: externalAccommodation, onAccommodationCh
         .ilike("last_name", guest?.last_name || "");
 
       localStorage.setItem("hasRSVPd", "true");
+      localStorage.setItem("rsvpName", `${guest?.first_name} ${guest?.last_name}`);
       setAllDeclined(declined);
       setSubmitted(true);
+      onSubmitSuccess?.(declined, accommodation);
     } catch {
       toast.error("Something went wrong. Please try again.");
     }
 
     setLoading(false);
+  };
+
+  const handleEditRsvp = async () => {
+    localStorage.removeItem("hasRSVPd");
+    setAlreadyRsvpd(false);
+    const savedName = localStorage.getItem("rsvpName");
+    if (savedName) {
+      setSearchName(savedName);
+      // Auto-trigger search
+      const parts = savedName.trim().split(/\s+/);
+      if (parts.length >= 2) {
+        setLoading(true);
+        setSearched(true);
+        const firstName = parts[0];
+        const lastName = parts.slice(1).join(" ");
+
+        const { data: match } = await supabase
+          .from("guests")
+          .select("*")
+          .ilike("first_name", firstName)
+          .ilike("last_name", lastName)
+          .limit(1);
+
+        if (match && match.length > 0) {
+          const found = match[0] as GuestRecord;
+          setGuest(found);
+          setAttendingCount(1);
+          setGuestNames([`${found.first_name} ${found.last_name}`]);
+
+          // Load previous responses
+          const { data: prev } = await supabase
+            .from("invited_guests")
+            .select("*")
+            .ilike("first_name", firstName)
+            .ilike("last_name", lastName)
+            .eq("has_responded", true)
+            .limit(1);
+
+          let responder = prev && prev.length > 0 ? prev[0] : null;
+
+          if (!responder) {
+            const { data: partyMembers } = await supabase
+              .from("guests")
+              .select("first_name, last_name")
+              .eq("party_name", found.party_name);
+
+            if (partyMembers && partyMembers.length > 1) {
+              for (const member of partyMembers) {
+                if (
+                  member.first_name.toLowerCase() === firstName.toLowerCase() &&
+                  member.last_name.toLowerCase() === lastName.toLowerCase()
+                ) continue;
+                const { data: memberRsvp } = await supabase
+                  .from("invited_guests")
+                  .select("*")
+                  .ilike("first_name", member.first_name)
+                  .ilike("last_name", member.last_name)
+                  .eq("has_responded", true)
+                  .limit(1);
+                if (memberRsvp && memberRsvp.length > 0) {
+                  responder = memberRsvp[0];
+                  break;
+                }
+              }
+            }
+          }
+
+          if (responder) {
+            setPreviouslyResponded(true);
+            const rsvps: Record<string, string> = {};
+            if (responder.welcome_party_rsvp) rsvps.welcome_party_rsvp = responder.welcome_party_rsvp;
+            if (responder.wedding_day_rsvp) rsvps.wedding_day_rsvp = responder.wedding_day_rsvp;
+            if (responder.pool_day_rsvp) rsvps.pool_day_rsvp = responder.pool_day_rsvp;
+            setEventRsvps(rsvps);
+            if (responder.dietary_restrictions) setDietary(responder.dietary_restrictions);
+          }
+        }
+        setLoading(false);
+      }
+    }
   };
 
   if (alreadyRsvpd && !submitted) {
@@ -236,10 +322,7 @@ const RsvpFormEmbed = ({ accommodation: externalAccommodation, onAccommodationCh
           </p>
           <button
             type="button"
-            onClick={() => {
-              localStorage.removeItem("hasRSVPd");
-              setAlreadyRsvpd(false);
-            }}
+            onClick={handleEditRsvp}
             className="font-body text-xs uppercase tracking-[0.25em] text-primary underline underline-offset-4 hover:opacity-70 transition-opacity"
           >
             Need to edit your RSVP?
@@ -256,10 +339,27 @@ const RsvpFormEmbed = ({ accommodation: externalAccommodation, onAccommodationCh
           <h2 className="heading-section mb-4">Thank You</h2>
           <div className="w-12 h-px bg-primary mx-auto mb-8" />
           <p className="body-editorial mx-auto">
+            Your RSVP has been recorded.
+            <br />
             {allDeclined
-              ? "Your RSVP has been recorded. Sorry we'll miss you!"
-              : "Your RSVP has been recorded. We can't wait to celebrate with you!"}
+              ? "We're sorry we'll miss you!"
+              : "We can't wait to celebrate with you!"}
           </p>
+          {!allDeclined && accommodation !== "Not Staying Onsite" && (
+            <>
+              <p className="font-body text-sm text-muted-foreground mt-6">
+                Please note: your room is not reserved until payment is received.
+              </p>
+              <a
+                href="https://paypal.me/nylerwedding"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-block mt-6 px-8 py-4 bg-primary text-primary-foreground font-body text-xs uppercase tracking-[0.25em] hover:opacity-90 transition-opacity"
+              >
+                Pay Here
+              </a>
+            </>
+          )}
         </FadeIn>
       </div>
     );
@@ -322,7 +422,7 @@ const RsvpFormEmbed = ({ accommodation: externalAccommodation, onAccommodationCh
               </p>
               {previouslyResponded && (
                 <p className="font-body text-xs text-primary mt-2 italic">
-                  We found your previous response — feel free to update it.
+                  Your party has already been RSVPd — your previous selections are loaded below. Feel free to update them.
                 </p>
               )}
             </div>
@@ -433,9 +533,18 @@ const RsvpFormEmbed = ({ accommodation: externalAccommodation, onAccommodationCh
               type="button"
               onClick={handleSubmit}
               disabled={loading}
-              className="w-full py-4 bg-primary text-primary-foreground font-body text-xs uppercase tracking-[0.25em] hover:opacity-90 transition-opacity disabled:opacity-50"
+              className="relative w-full py-4 font-body text-xs uppercase tracking-[0.25em] transition-opacity disabled:pointer-events-none overflow-hidden border border-primary"
             >
-              {loading ? "Submitting..." : previouslyResponded ? "Update RSVP" : "Submit RSVP"}
+              {loading && (
+                <div
+                  className="absolute inset-0 bg-primary animate-[progress_4s_ease-in-out_forwards]"
+                  style={{ transformOrigin: 'left' }}
+                />
+              )}
+              <span className={`relative z-10 ${loading ? 'text-white' : 'text-primary-foreground'}`}>
+                {loading ? "Submitting..." : previouslyResponded ? "Update RSVP" : "Submit RSVP"}
+              </span>
+              {!loading && <div className="absolute inset-0 bg-primary -z-0" />}
             </button>
           </div>
         </FadeIn>
