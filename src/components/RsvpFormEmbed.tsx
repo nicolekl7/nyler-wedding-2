@@ -7,9 +7,9 @@ import { Search } from "lucide-react";
 import { loadPartyRsvpState, savePartyRsvpState, type GuestRecord } from "@/lib/rsvp";
 
 const events = [
-  { key: "welcome_party_rsvp" as const, label: "Welcome Pizza Party", sub: "Wednesday, Sept 16" },
-  { key: "wedding_day_rsvp" as const, label: "The Wedding Day", sub: "Thursday, Sept 17" },
-  { key: "pool_day_rsvp" as const, label: "Recovery Pool Day", sub: "Friday, Sept 18" },
+  { key: "welcome_party_rsvp" as const, label: "Welcome Pizza Party", sub: "Wednesday, Sept 16 · 6:30 PM" },
+  { key: "wedding_day_rsvp" as const, label: "The Wedding Day", sub: "Thursday, Sept 17 · 4:30 PM" },
+  { key: "pool_day_rsvp" as const, label: "Recovery Pool Day", sub: "Friday, Sept 18 · 12:00 PM" },
 ];
 
 const accommodationOptions = [
