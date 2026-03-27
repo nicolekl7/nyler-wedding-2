@@ -3,7 +3,7 @@ import { BrowserRouter, Route, Routes } from "react-router-dom";
 import ScrollToTop from "./components/ScrollToTop";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import Index from "./pages/index";
+import index from "./pages/index";
 import TheWeekend from "./pages/TheWeekend";
 import AccommodationsV2 from "./pages/AccommodationsV2";
 import BookingSuccess from "./pages/BookingSuccess";
@@ -21,7 +21,7 @@ const App = () => (
       <BrowserRouter>
         <ScrollToTop />
         <Routes>
-          <Route path="/" element={<Index />} />
+          <Route path="/" element={<index />} />
           <Route path="/the-weekend" element={<TheWeekend />} />
           <Route path="/reserve-lodging" element={<AccommodationsV2 />} />
           <Route path="/booking-success" element={<BookingSuccess />} />
