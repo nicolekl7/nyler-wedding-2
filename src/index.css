@@ -68,6 +68,12 @@
 
   body {
     @apply bg-background text-foreground font-body antialiased;
+    cursor: url('/images/cat-cursor-small.png') 20 20, auto;
+  }
+
+  a, button, [role="button"], input[type="submit"], input[type="button"],
+  select, label[for], .cursor-pointer, [onclick] {
+    cursor: url('/images/cat-cursor-pointer-small.png') 20 20, pointer !important;
   }
 
   h1, h2, h3, h4, h5, h6 {
@@ -102,15 +108,10 @@
     @apply font-body text-xs uppercase tracking-[0.25em] text-muted-foreground hover:text-foreground transition-colors duration-300;
   }
 }
-/* Force hide iOS video play button in Low Power Mode */
-video::-webkit-media-controls {
-  display: none !important;
-}
-video::-webkit-media-controls-start-playback-button {
-  display: none !important;
-  -webkit-appearance: none;
-}
-video::-webkit-media-controls-overlay-play-button {
-  display: none !important;
-  -webkit-appearance: none;
+
+@keyframes progress {
+  0% { width: 0%; }
+  60% { width: 70%; }
+  80% { width: 85%; }
+  100% { width: 100%; }
 }
